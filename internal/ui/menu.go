@@ -28,7 +28,7 @@ func SelectFrom[T comparable](title string, choices []Choice[T], current T) (T, 
 	}
 	cursor := max(0, slices.IndexFunc(choices, func(c Choice[T]) bool { return c.Value == current }))
 	m, err := run(selectModel[T]{frame: frame{title: title}, choices: choices, cursor: cursor})
-	slog.Debug("select", "title", title, "label", m.choices[m.cursor].Label, "aborted", m.aborted)
+	slog.Debug("select", "title", title, "label", stripStyle(m.choices[m.cursor].Label), "aborted", m.aborted)
 	return m.choices[m.cursor].Value, err
 }
 

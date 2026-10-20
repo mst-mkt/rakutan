@@ -19,17 +19,20 @@ func stripStyle(s string) string {
 	return styleEscape.ReplaceAllString(s, "")
 }
 
-func displayWidth(s string) int {
-	return runewidth.StringWidth(stripStyle(s))
-}
+const reset = "\x1b[0m"
 
 func style(codes string) func(string) string {
+	start := "\x1b[" + codes + "m"
 	return func(s string) string {
 		if !colored || s == "" {
 			return s
 		}
-		return "\x1b[" + codes + "m" + s + "\x1b[0m"
+		return start + strings.ReplaceAll(s, reset, reset+start) + reset
 	}
+}
+
+func displayWidth(s string) int {
+	return runewidth.StringWidth(stripStyle(s))
 }
 
 var (
