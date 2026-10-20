@@ -9,6 +9,7 @@ require (
 	github.com/blacktop/go-termimg v0.1.26
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/x/term v0.2.2
+	github.com/cli/browser v1.3.0
 	github.com/google/go-cmp v0.7.0
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/zalando/go-keyring v0.2.8

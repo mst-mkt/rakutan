@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"slices"
 
+	"github.com/cli/browser"
+
 	"github.com/mst-mkt/rakutan/internal/archive"
 	"github.com/mst-mkt/rakutan/internal/assist"
 	"github.com/mst-mkt/rakutan/internal/manaba"
@@ -301,7 +303,15 @@ func (a *attempt) submit(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return true, showResult(ctx, a.s, r)
+	if err := showResult(ctx, a.s, r); err != nil {
+		return true, err
+	}
+
+	open, err := ui.Confirm("ブラウザで結果のページを開きますか?")
+	if err != nil || !open {
+		return true, err
+	}
+	return true, browser.OpenURL(r.URL + "?ReviewMode=1")
 }
 
 func showResult(ctx context.Context, s *session, r *manaba.Review) error {
