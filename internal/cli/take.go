@@ -62,7 +62,11 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	}
 	slog.Info("mode", "mode", mode)
 	if mode == browserMode {
-		return browser.OpenURL(cv.URL)
+		if err := browser.OpenURL(cv.URL); err != nil {
+			return err
+		}
+		ui.Done("ブラウザで開きました")
+		return nil
 	}
 	if mode == aiMode {
 		ui.Notice(aiCaution)
