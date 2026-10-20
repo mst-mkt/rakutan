@@ -97,9 +97,16 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	return a.menu(ctx)
 }
 
+const aiCaution = "注意: AI の回答案は、AI の利用が認められている講義やアンケートのための機能です。" +
+	"禁止されている講義で使うと、成績や単位に影響するおそれがあります。各講義の方針を確認してください。"
+
 func (c takeCmd) wantsAI() (bool, error) {
+	if c.AI != nil && !*c.AI {
+		return false, nil
+	}
+	ui.Notice(aiCaution)
 	if c.AI != nil {
-		return *c.AI, nil
+		return true, nil
 	}
 	return ui.Confirm("AI に回答案を出させますか?")
 }
