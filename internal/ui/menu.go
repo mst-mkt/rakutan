@@ -66,6 +66,9 @@ func (f frame) finished() bool {
 }
 
 func (f frame) line(value string) string {
+	if f.aborted {
+		value = "(中断)"
+	}
 	return f.title + ": " + value
 }
 

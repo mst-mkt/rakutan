@@ -61,8 +61,8 @@ func TestSelect(t *testing.T) {
 }
 
 func TestSelectAbort(t *testing.T) {
-	m := finishKeepingFirstLine(t, selectModel[string]{frame: frame{title: "講義"}, choices: abc}, esc)
-	assertView(t, m, "講義: A\n")
+	m := press(t, selectModel[string]{frame: frame{title: "講義"}, choices: abc}, esc)
+	assertView(t, m, "講義: (中断)\n")
 	if !m.wasAborted() {
 		t.Error("not aborted")
 	}
