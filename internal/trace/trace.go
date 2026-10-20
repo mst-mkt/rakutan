@@ -130,7 +130,11 @@ func (rt roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func (t *Trace) dump(n int64, req *http.Request, res *http.Response, body []byte) string {
-	name := fmt.Sprintf("%03d-%s-%s%s", n, req.Method, baseName(req.URL), extension(res.Header.Get("Content-Type"), body))
+	base, ext := baseName(req.URL), extension(res.Header.Get("Content-Type"), body)
+	if strings.HasSuffix(base, ext) {
+		ext = ""
+	}
+	name := fmt.Sprintf("%03d-%s-%s%s", n, req.Method, base, ext)
 	if err := os.WriteFile(filepath.Join(t.dir, name), body, 0o600); err != nil {
 		t.logger.Warn("dump", "file", name, "err", err)
 	}

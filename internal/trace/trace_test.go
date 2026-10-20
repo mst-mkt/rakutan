@@ -91,6 +91,15 @@ func TestDumpsResponsesAndKeepsBody(t *testing.T) {
 	}
 }
 
+func TestDumpKeepsSingleExtension(t *testing.T) {
+	tr := &Trace{dir: t.TempDir()}
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/course_1__2/fig.png?view=inline", nil)
+	res := &http.Response{Header: http.Header{"Content-Type": {"image/png"}}}
+	if got := tr.dump(1, req, res, []byte("png")); got != "001-GET-fig.png" {
+		t.Errorf("dump name = %q, want 001-GET-fig.png", got)
+	}
+}
+
 func TestDescribesMultipartForm(t *testing.T) {
 	tr, client, base := setup(t)
 	var buf bytes.Buffer
