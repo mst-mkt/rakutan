@@ -20,6 +20,7 @@
             gotools
             golangci-lint
           ];
+          RAKUTAN_DEBUG = "1";
         };
       });
 

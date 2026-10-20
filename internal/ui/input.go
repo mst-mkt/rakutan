@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -54,6 +55,14 @@ func Confirm(title string) (bool, error) {
 }
 
 func editLine(prompt, initial string, mask bool) (string, error) {
+	line, err := readOrEdit(prompt, initial, mask)
+	if !mask {
+		slog.Debug("input", "prompt", prompt, "value", line, "err", err)
+	}
+	return line, err
+}
+
+func readOrEdit(prompt, initial string, mask bool) (string, error) {
 	fd := int(os.Stdin.Fd())
 	if !term.IsTerminal(fd) {
 		fmt.Print(prompt)

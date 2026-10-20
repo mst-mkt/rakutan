@@ -47,7 +47,7 @@ func fakeManaba(t *testing.T, password string) (*Client, *url.Values) {
 	t.Cleanup(server.Close)
 
 	jar, _ := cookiejar.New(nil)
-	c := New(jar, nil)
+	c := New(&http.Client{Jar: jar}, nil)
 	c.base, _ = url.Parse(server.URL + "/local/")
 	return c, &posted
 }

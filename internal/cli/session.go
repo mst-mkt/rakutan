@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"net/http"
 	"path/filepath"
 
 	"github.com/adrg/xdg"
@@ -28,22 +30,25 @@ type session struct {
 	jar    *manaba.Jar
 }
 
-func openSession() (*session, error) {
+func openSession(transport http.RoundTripper) (*session, error) {
 	cookies, err := sessionStore.Load()
 	if err != nil && !errors.Is(err, secret.ErrNotFound) {
 		warn(err, "保存したセッションを読めません")
 	}
+	slog.Debug("session", "restored", len(cookies) > 0)
 
 	s := &session{jar: manaba.NewJar(cookies)}
-	s.client = manaba.New(s.jar, s.login)
+	s.client = manaba.New(&http.Client{Jar: s.jar, Transport: transport}, s.login)
 	return s, nil
 }
 
 func (s *session) login(ctx context.Context) error {
 	cred, err := credentials.Load()
 	if err != nil {
+		slog.Info("login", "credential", "prompt", "keyring", err)
 		return s.loginInteractively(ctx)
 	}
+	slog.Info("login", "credential", "keyring")
 	return s.loginWith(ctx, cred)
 }
 
@@ -65,6 +70,7 @@ func (s *session) loginWith(ctx context.Context, cred credential) error {
 	if err := s.client.Login(ctx, cred.UserID, cred.Password); err != nil {
 		return err
 	}
+	slog.Info("login succeeded", "userid", cred.UserID)
 	return sessionStore.Save(s.jar.Export())
 }
 

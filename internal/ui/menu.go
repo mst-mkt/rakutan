@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -31,6 +32,7 @@ func SelectFrom[T comparable](title string, choices []Choice[T], current T) (T, 
 	}
 	cursor := max(0, slices.IndexFunc(choices, func(c Choice[T]) bool { return c.Value == current }))
 	m, err := run(selectModel[T]{frame: frame{title: title}, choices: choices, cursor: cursor})
+	slog.Debug("select", "title", title, "label", m.choices[m.cursor].Label, "aborted", m.aborted)
 	return m.choices[m.cursor].Value, err
 }
 
@@ -40,6 +42,7 @@ func MultiSelect(title string, choices []Choice[string], current []string) ([]st
 		chosen[i] = slices.Contains(current, c.Value)
 	}
 	m, err := run(multiSelectModel{frame: frame{title: title}, choices: choices, chosen: chosen})
+	slog.Debug("multiselect", "title", title, "labels", m.labels(), "aborted", m.aborted)
 	return m.values(), err
 }
 

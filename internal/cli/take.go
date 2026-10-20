@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 
 	"github.com/mst-mkt/rakutan/internal/manaba"
@@ -45,6 +46,7 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 		return err
 	}
 
+	slog.Info("cover", "ref", ref, "title", cv.Title, "status", cv.Status, "startable", cv.Startable())
 	ui.PrintCover(cv)
 	if cv.Submitted {
 		r, err := s.client.Review(ctx, ref)
@@ -64,6 +66,7 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("sheet", "questions", len(sheet.Questions))
 	a := &attempt{s: s, sheet: sheet, answers: manaba.AnswersOf(sheet.Questions)}
 	for i := range sheet.Questions {
 		if err := a.answer(ctx, i); err != nil {

@@ -21,9 +21,9 @@ type Client struct {
 	reauth func(context.Context) error
 }
 
-func New(jar http.CookieJar, reauth func(context.Context) error) *Client {
+func New(hc *http.Client, reauth func(context.Context) error) *Client {
 	base, _ := url.Parse(BaseURL)
-	return &Client{http: &http.Client{Jar: jar}, base: base, reauth: reauth}
+	return &Client{http: hc, base: base, reauth: reauth}
 }
 
 func (c *Client) Get(ctx context.Context, ref string) (*Page, error) {

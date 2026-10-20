@@ -7,6 +7,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"log/slog"
 	"os"
 
 	"github.com/blacktop/go-termimg"
@@ -25,6 +26,7 @@ func ShowImage(data []byte) error {
 	}
 
 	cols, rows := fit(img.Bounds(), imageColumns(), maxImageRows)
+	slog.Debug("image", "width", img.Bounds().Dx(), "height", img.Bounds().Dy(), "cols", cols, "rows", rows)
 
 	fmt.Print(reserve(rows))
 	if err := termimg.New(img).Size(cols, rows).Print(); err != nil {
