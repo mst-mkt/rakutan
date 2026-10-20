@@ -54,6 +54,10 @@ func Notice(msg string) {
 	fmt.Fprintln(os.Stderr, yellow(msg))
 }
 
+func Hint(msg string) {
+	fmt.Println(faint(msg))
+}
+
 func Done(msg string) {
 	fmt.Println(green(msg))
 }

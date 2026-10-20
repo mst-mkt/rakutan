@@ -16,7 +16,19 @@ import (
 
 type takeCmd struct {
 	Quiz string `arg:"" optional:"" help:"小テストの URL (省略すると一覧から選ぶ)"`
-	AI   *bool  `name:"ai" negatable:"" help:"AI に回答案を出させる (省略すると開始前に聞く)"`
+	Mode string `enum:",browser,terminal,ai" default:"" placeholder:"browser|terminal|ai" help:"回答方法 (省略すると開始前に聞く)"`
+}
+
+const (
+	browserMode  = "browser"
+	terminalMode = "terminal"
+	aiMode       = "ai"
+)
+
+var modes = []ui.Choice[string]{
+	{Label: "ブラウザで開く", Value: browserMode},
+	{Label: "ターミナルで回答する", Value: terminalMode},
+	{Label: "AI の回答を元に回答する", Value: aiMode},
 }
 
 type fallback int
@@ -79,21 +91,25 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	if !cv.Startable() {
 		return fmt.Errorf("この小テストは開始できません (%s)", cv.Status)
 	}
-	useAI, err := c.wantsAI()
+	mode, err := c.chooseMode()
 	if err != nil {
 		return err
 	}
-	if ok, err := ui.Confirm("開始すると経過時間の計測が始まります。開始しますか?"); err != nil || !ok {
-		return err
+	slog.Info("mode", "mode", mode)
+	if mode == browserMode {
+		return browser.OpenURL(cv.URL)
+	}
+	if mode == aiMode {
+		ui.Notice(aiCaution)
 	}
 
 	sheet, err := s.client.Start(ctx, cv)
 	if err != nil {
 		return err
 	}
-	slog.Info("sheet", "questions", len(sheet.Questions), "ai", useAI)
+	slog.Info("sheet", "questions", len(sheet.Questions))
 	a := &attempt{s: s, sheet: sheet, answers: manaba.AnswersOf(sheet.Questions)}
-	if err := a.fill(ctx, useAI); err != nil {
+	if err := a.fill(ctx, mode == aiMode); err != nil {
 		return err
 	}
 	return a.menu(ctx)
@@ -102,15 +118,12 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 const aiCaution = "注意: AI の回答案は、AI の利用が認められている講義やアンケートのための機能です。" +
 	"禁止されている講義で使うと、成績や単位に影響するおそれがあります。各講義の方針を確認してください。"
 
-func (c takeCmd) wantsAI() (bool, error) {
-	if c.AI != nil && !*c.AI {
-		return false, nil
+func (c takeCmd) chooseMode() (string, error) {
+	if c.Mode != "" {
+		return c.Mode, nil
 	}
-	ui.Notice(aiCaution)
-	if c.AI != nil {
-		return true, nil
-	}
-	return ui.Confirm("AI に回答案を出させますか?")
+	ui.Hint("ターミナルで回答すると、選んだ時点で経過時間の計測が始まります")
+	return ui.Select("回答方法", modes)
 }
 
 func (c takeCmd) quizRef(ctx context.Context, s *session) (string, error) {

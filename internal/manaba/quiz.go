@@ -26,6 +26,7 @@ var (
 )
 
 type Cover struct {
+	URL       string `json:"url"`
 	Course    string `json:"course"`
 	Title     string `json:"title"`
 	Status    string `json:"status"`
@@ -142,6 +143,7 @@ func ParseCover(p *Page) (*Cover, error) {
 		return text(th) == "状態"
 	}).Next())
 	cv := &Cover{
+		URL:       p.URLWithoutQuery(),
 		Course:    text(p.Doc.Find("#coursename")),
 		Title:     title(p),
 		Status:    status,
