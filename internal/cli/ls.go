@@ -2,13 +2,11 @@ package cli
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"slices"
-	"text/tabwriter"
 	"time"
 
 	"github.com/mst-mkt/rakutan/internal/manaba"
+	"github.com/mst-mkt/rakutan/internal/ui"
 )
 
 type lsCmd struct{}
@@ -19,11 +17,12 @@ func (lsCmd) Run(ctx context.Context, s *session) error {
 		return err
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	var rows [][]string
 	for _, a := range slices.SortedStableFunc(slices.Values(list), byDeadline) {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", deadline(a.End), a.Kind, a.Title, a.Course)
+		rows = append(rows, []string{deadline(a.End), a.Kind, a.Title, a.Course})
 	}
-	return w.Flush()
+	ui.PrintTable(rows)
+	return nil
 }
 
 func byDeadline(a, b manaba.Assignment) int {

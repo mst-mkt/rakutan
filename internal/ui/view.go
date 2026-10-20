@@ -50,6 +50,28 @@ func PrintReview(r *manaba.Review) {
 	fmt.Println()
 }
 
+func PrintTable(rows [][]string) {
+	var widths []int
+	for _, row := range rows {
+		for i, cell := range row {
+			if i == len(widths) {
+				widths = append(widths, 0)
+			}
+			widths[i] = max(widths[i], displayWidth(cell))
+		}
+	}
+	for _, row := range rows {
+		var b strings.Builder
+		for i, cell := range row {
+			b.WriteString(cell)
+			if i < len(row)-1 {
+				b.WriteString(strings.Repeat(" ", widths[i]-displayWidth(cell)+2))
+			}
+		}
+		fmt.Println(b.String())
+	}
+}
+
 func PrintSaved(path string) {
 	fmt.Printf("%s %s\n", green("ログを保存しました:"), faint(path))
 }
@@ -71,7 +93,7 @@ func printValues(q manaba.Question, values []string, paint func(string) string) 
 }
 
 func printWrapped(prefix, s string, paint func(string) string) {
-	width := max(terminalWidth()-runewidth.StringWidth(stripStyle(prefix)), 10)
+	width := max(terminalWidth()-displayWidth(prefix), 10)
 	for line := range strings.SplitSeq(runewidth.Wrap(s, width), "\n") {
 		fmt.Println(prefix + paint(line))
 	}

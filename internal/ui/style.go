@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mattn/go-runewidth"
 	"golang.org/x/term"
 )
 
@@ -16,6 +17,10 @@ var (
 
 func stripStyle(s string) string {
 	return styleEscape.ReplaceAllString(s, "")
+}
+
+func displayWidth(s string) int {
+	return runewidth.StringWidth(stripStyle(s))
 }
 
 func style(codes string) func(string) string {
