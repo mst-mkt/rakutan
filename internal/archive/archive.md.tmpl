@@ -1,0 +1,22 @@
+---
+course: {{printf "%q" .Course}}
+title: {{printf "%q" .Title}}
+url: {{.URL}}
+submitted_at: {{printf "%q" .SubmittedAt}}
+score: {{printf "%q" .Score}}
+---
+
+# {{.Title}}
+{{range $q := .Questions}}
+## {{$q.ID}}
+
+{{$q.Text}}
+{{range $q.Images}}
+![]({{index $.Images .}})
+{{end}}
+{{if $q.Options}}{{range $q.Options}}- [{{if $q.Chosen .}}x{{else}} {{end}}] {{.Label}}{{if $q.IsCorrect .}} (正解){{end}}
+{{end}}{{else}}回答: {{join $q.Answer ", "}}
+{{with $q.Correct}}正解: {{join . ", "}}
+{{end}}{{end}}
+判定: {{$q.Mark}}{{with $q.Score}} ({{.}}{{with $q.Points}} / {{.}}{{end}} 点){{end}}
+{{end -}}
