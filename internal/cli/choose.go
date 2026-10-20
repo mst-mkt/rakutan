@@ -55,11 +55,11 @@ func courseChoices(courses []manaba.Course, next map[string]time.Time, now time.
 		if !c.Pending {
 			continue
 		}
-		label := c.Title
+		choice := ui.Choice[manaba.Course]{Label: c.Title, Value: c}
 		if end, ok := next[c.Title]; ok {
-			label += "  " + ui.Deadline(end, now)
+			choice.Detail = ui.Deadline(end, now)
 		}
-		choices = append(choices, ui.Choice[manaba.Course]{Label: label, Value: c})
+		choices = append(choices, choice)
 	}
 	return choices
 }
@@ -68,7 +68,7 @@ func quizChoices(quizzes []manaba.Quiz, now time.Time) []ui.Choice[string] {
 	var choices []ui.Choice[string]
 	for _, q := range slices.SortedStableFunc(slices.Values(quizzes), byEnd) {
 		if q.Answerable() {
-			choices = append(choices, ui.Choice[string]{Label: ui.Deadline(q.End, now) + "  " + q.Title, Value: q.Href})
+			choices = append(choices, ui.Choice[string]{Label: q.Title, Detail: ui.Deadline(q.End, now), Value: q.Href})
 		}
 	}
 	return choices

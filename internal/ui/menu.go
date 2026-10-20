@@ -12,8 +12,9 @@ import (
 var ErrAborted = errors.New("aborted")
 
 type Choice[T comparable] struct {
-	Label string
-	Value T
+	Label  string
+	Detail string
+	Value  T
 }
 
 func Select[T comparable](title string, choices []Choice[T]) (T, error) {
@@ -28,7 +29,7 @@ func SelectFrom[T comparable](title string, choices []Choice[T], current T) (T, 
 	}
 	cursor := max(0, slices.IndexFunc(choices, func(c Choice[T]) bool { return c.Value == current }))
 	m, err := run(selectModel[T]{frame: frame{title: title}, choices: choices, cursor: cursor})
-	slog.Debug("select", "title", title, "label", stripStyle(m.choices[m.cursor].Label), "aborted", m.aborted)
+	slog.Debug("select", "title", title, "label", m.choices[m.cursor].Label, "aborted", m.aborted)
 	return m.choices[m.cursor].Value, err
 }
 
@@ -129,9 +130,12 @@ func (m selectModel[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m selectModel[T]) View() string {
-	menu := make([]string, len(m.choices))
+	var menu []string
 	for i, c := range m.choices {
-		menu[i] = marker(i == m.cursor) + highlight(i == m.cursor, c.Label)
+		menu = append(menu, marker(i == m.cursor)+highlight(i == m.cursor, c.Label))
+		if c.Detail != "" {
+			menu = append(menu, marker(false)+faint(c.Detail))
+		}
 	}
 	return withMenu(m.line(m.choices[m.cursor].Label), m.finished(), menu, "↑↓ 移動  enter 決定")
 }

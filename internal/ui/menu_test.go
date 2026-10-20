@@ -17,7 +17,7 @@ var (
 	space = tea.KeyMsg{Type: tea.KeySpace, Runes: []rune(" ")}
 
 	ansi = regexp.MustCompile(`\x1b\[[0-9;]*m`)
-	abc  = []Choice[string]{{"A", "a"}, {"B", "b"}, {"C", "c"}}
+	abc  = []Choice[string]{{Label: "A", Value: "a"}, {Label: "B", Value: "b"}, {Label: "C", Value: "c"}}
 )
 
 func press[M tea.Model](t *testing.T, m M, msgs ...tea.Msg) M {
@@ -76,4 +76,19 @@ func TestMultiSelect(t *testing.T) {
 	if diff := cmp.Diff([]string{"a", "c"}, m.values()); diff != "" {
 		t.Errorf("values mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestSelectShowsDetailOnSecondLine(t *testing.T) {
+	m := selectModel[string]{frame: frame{title: "小テスト"}, choices: []Choice[string]{
+		{Label: "第6回", Detail: "11/09 17:00 締切 (あと 20 日)", Value: "6"},
+		{Label: "第7回", Detail: "11/16 17:00 締切 (あと 27 日)", Value: "7"},
+	}}
+	want := "? 小テスト: 第6回\n" +
+		"> 第6回\n" +
+		"  11/09 17:00 締切 (あと 20 日)\n" +
+		"  第7回\n" +
+		"  11/16 17:00 締切 (あと 27 日)\n" +
+		"↑↓ 移動  enter 決定\n"
+	assertView(t, m, want)
+	assertView(t, press(t, m, down, enter), "? 小テスト: 第7回\n")
 }
