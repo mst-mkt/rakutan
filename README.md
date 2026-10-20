@@ -22,3 +22,7 @@ go run github.com/mst-mkt/rakutan@latest
 
 - Credentials and the session are stored in the system keyring (Secret Service on Linux, Keychain on macOS). Without a keyring, you will be asked to log in each time the session expires.
 - AI suggestions require Claude Code.
+
+## License
+
+[MIT](./LICENSE)
