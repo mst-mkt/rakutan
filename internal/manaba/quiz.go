@@ -34,6 +34,7 @@ type Cover struct {
 }
 
 type Sheet struct {
+	Course    string     `json:"course"`
 	Title     string     `json:"title"`
 	Questions []Question `json:"questions"`
 	form      Form
@@ -158,7 +159,7 @@ func ParseSheet(p *Page) (*Sheet, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Sheet{Title: title(p), Questions: parseQuestions(p), form: f}, nil
+	return &Sheet{Course: text(p.Doc.Find("#coursename")), Title: title(p), Questions: parseQuestions(p), form: f}, nil
 }
 
 func ParseConfirmation(p *Page) (*Confirmation, error) {

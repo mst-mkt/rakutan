@@ -30,8 +30,12 @@ type image struct {
 	rel string
 }
 
+func CourseDir(root, course string) string {
+	return filepath.Join(root, sanitize(course))
+}
+
 func Save(ctx context.Context, dl Downloader, root string, r *manaba.Review) (string, error) {
-	dir := filepath.Join(root, sanitize(r.Course))
+	dir := CourseDir(root, r.Course)
 
 	local := map[string]string{}
 	for img := range images(r) {

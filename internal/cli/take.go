@@ -6,12 +6,29 @@ import (
 	"log/slog"
 	"slices"
 
+	"github.com/mst-mkt/rakutan/internal/archive"
+	"github.com/mst-mkt/rakutan/internal/assist"
 	"github.com/mst-mkt/rakutan/internal/manaba"
 	"github.com/mst-mkt/rakutan/internal/ui"
 )
 
 type takeCmd struct {
 	Quiz string `arg:"" optional:"" help:"小テストの URL (省略すると一覧から選ぶ)"`
+	AI   *bool  `name:"ai" negatable:"" help:"AI に回答案を出させる (省略すると開始前に聞く)"`
+}
+
+type fallback int
+
+const (
+	retryFallback fallback = iota
+	manualFallback
+	abortFallback
+)
+
+var fallbacks = []ui.Choice[fallback]{
+	{Label: "もう一度 AI に頼む", Value: retryFallback},
+	{Label: "自分で回答する", Value: manualFallback},
+	{Label: "中断する", Value: abortFallback},
 }
 
 type action int
@@ -19,6 +36,7 @@ type action int
 const (
 	submitAction action = iota
 	editAction
+	reviewAction
 	saveAction
 	quitAction
 )
@@ -26,6 +44,7 @@ const (
 var actions = []ui.Choice[action]{
 	{Label: "提出する", Value: submitAction},
 	{Label: "問題を選んで直す", Value: editAction},
+	{Label: "全問を順に確認する", Value: reviewAction},
 	{Label: "一時保存して終了", Value: saveAction},
 	{Label: "保存せずに終了", Value: quitAction},
 }
@@ -58,6 +77,10 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	if !cv.Startable() {
 		return fmt.Errorf("この小テストは開始できません (%s)", cv.Status)
 	}
+	useAI, err := c.wantsAI()
+	if err != nil {
+		return err
+	}
 	if ok, err := ui.Confirm("開始すると経過時間の計測が始まります。開始しますか?"); err != nil || !ok {
 		return err
 	}
@@ -66,14 +89,19 @@ func (c takeCmd) Run(ctx context.Context, s *session) error {
 	if err != nil {
 		return err
 	}
-	slog.Info("sheet", "questions", len(sheet.Questions))
+	slog.Info("sheet", "questions", len(sheet.Questions), "ai", useAI)
 	a := &attempt{s: s, sheet: sheet, answers: manaba.AnswersOf(sheet.Questions)}
-	for i := range sheet.Questions {
-		if err := a.answer(ctx, i); err != nil {
-			return err
-		}
+	if err := a.fill(ctx, useAI); err != nil {
+		return err
 	}
 	return a.menu(ctx)
+}
+
+func (c takeCmd) wantsAI() (bool, error) {
+	if c.AI != nil {
+		return *c.AI, nil
+	}
+	return ui.Confirm("AI に回答案を出させますか?")
 }
 
 func (c takeCmd) quizRef(ctx context.Context, s *session) (string, error) {
@@ -140,6 +168,55 @@ func questionChoices(qs []manaba.Question) []ui.Choice[int] {
 	return choices
 }
 
+func (a *attempt) fill(ctx context.Context, useAI bool) error {
+	if useAI {
+		suggested, err := a.suggest(ctx)
+		if err != nil || suggested {
+			return err
+		}
+	}
+	return a.answerAll(ctx)
+}
+
+func (a *attempt) answerAll(ctx context.Context) error {
+	for i := range a.sheet.Questions {
+		if err := a.answer(ctx, i); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *attempt) suggest(ctx context.Context) (bool, error) {
+	for {
+		var suggestion manaba.Answers
+		err := ui.Wait("AI が回答を考えています", func() (err error) {
+			suggestion, err = assist.Suggest(ctx, a.s.client, a.sheet, archive.CourseDir(archiveDir, a.sheet.Course))
+			return err
+		})
+		if err == nil {
+			for id, v := range suggestion {
+				if len(v) > 0 {
+					a.answers[id] = v
+				}
+			}
+			return true, nil
+		}
+
+		warn(err, "AI の回答案を受け取れませんでした")
+		next, err := ui.Select("どうしますか", fallbacks)
+		if err != nil {
+			return false, err
+		}
+		switch next {
+		case manualFallback:
+			return false, nil
+		case abortFallback:
+			return false, ui.ErrAborted
+		}
+	}
+}
+
 func (a *attempt) answer(ctx context.Context, i int) error {
 	q := a.sheet.Questions[i]
 	ui.PrintQuestion(i+1, len(a.sheet.Questions), q)
@@ -179,6 +256,10 @@ func (a *attempt) menu(ctx context.Context) error {
 				return err
 			}
 			if err := a.answer(ctx, i); err != nil {
+				return err
+			}
+		case reviewAction:
+			if err := a.answerAll(ctx); err != nil {
 				return err
 			}
 		case saveAction:
