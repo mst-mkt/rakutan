@@ -54,7 +54,7 @@ func assertView(t *testing.T, m tea.Model, want string) {
 func TestSelect(t *testing.T) {
 	m := press(t, selectModel[string]{frame: frame{title: "講義"}, choices: abc}, down, down, down, up)
 	m = finishKeepingFirstLine(t, m, enter)
-	assertView(t, m, "講義: B\n")
+	assertView(t, m, "? 講義: B\n")
 	if got := m.choices[m.cursor].Value; got != "b" {
 		t.Errorf("value = %q, want b", got)
 	}
@@ -62,7 +62,7 @@ func TestSelect(t *testing.T) {
 
 func TestSelectAbort(t *testing.T) {
 	m := press(t, selectModel[string]{frame: frame{title: "講義"}, choices: abc}, esc)
-	assertView(t, m, "講義: (中断)\n")
+	assertView(t, m, "? 講義: (中断)\n")
 	if !m.wasAborted() {
 		t.Error("not aborted")
 	}
@@ -72,7 +72,7 @@ func TestMultiSelect(t *testing.T) {
 	m := multiSelectModel{frame: frame{title: "回答"}, choices: abc, chosen: make([]bool, 3)}
 	m = press(t, m, space, down, down, space, up, space, space)
 	m = finishKeepingFirstLine(t, m, enter)
-	assertView(t, m, "回答: A / C\n")
+	assertView(t, m, "? 回答: A / C\n")
 	if diff := cmp.Diff([]string{"a", "c"}, m.values()); diff != "" {
 		t.Errorf("values mismatch (-want +got):\n%s", diff)
 	}

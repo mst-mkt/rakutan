@@ -11,10 +11,6 @@ import (
 
 var ErrAborted = errors.New("aborted")
 
-func faint(s string) string {
-	return "\x1b[2m" + s + "\x1b[0m"
-}
-
 type Choice[T comparable] struct {
 	Label string
 	Value T
@@ -67,9 +63,9 @@ func (f frame) finished() bool {
 
 func (f frame) line(value string) string {
 	if f.aborted {
-		value = "(中断)"
+		return promptLine(f.title, faint("(中断)"))
 	}
-	return f.title + ": " + value
+	return promptLine(f.title, cyan(value))
 }
 
 func (f frame) finish(key tea.KeyMsg) (frame, bool) {
@@ -135,7 +131,7 @@ func (m selectModel[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m selectModel[T]) View() string {
 	menu := make([]string, len(m.choices))
 	for i, c := range m.choices {
-		menu[i] = marker(i == m.cursor) + c.Label
+		menu[i] = marker(i == m.cursor) + highlight(i == m.cursor, c.Label)
 	}
 	return withMenu(m.line(m.choices[m.cursor].Label), m.finished(), menu, "↑↓ 移動  enter 決定")
 }
@@ -176,7 +172,7 @@ func (m multiSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m multiSelectModel) View() string {
 	menu := make([]string, len(m.choices))
 	for i, c := range m.choices {
-		menu[i] = marker(i == m.cursor) + checkbox(m.chosen[i]) + c.Label
+		menu[i] = marker(i == m.cursor) + checkbox(m.chosen[i]) + highlight(i == m.cursor, c.Label)
 	}
 	return withMenu(m.line(strings.Join(m.labels(), " / ")), m.finished(), menu, "↑↓ 移動  space 選択  enter 決定")
 }
@@ -203,14 +199,21 @@ func (m multiSelectModel) values() []string {
 
 func marker(current bool) string {
 	if current {
-		return "> "
+		return promptBar(">") + " "
 	}
 	return "  "
 }
 
 func checkbox(checked bool) string {
 	if checked {
-		return "[x] "
+		return green("[x]") + " "
 	}
 	return "[ ] "
+}
+
+func highlight(current bool, label string) string {
+	if current {
+		return cyan(label)
+	}
+	return label
 }

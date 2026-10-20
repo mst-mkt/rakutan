@@ -131,7 +131,7 @@ func (e editor) render(prompt string) string {
 	after := runewidth.StringWidth(string([]rune(shown)[e.cursor:]))
 
 	var b strings.Builder
-	b.WriteString("\r" + prompt + shown + "\x1b[K")
+	b.WriteString("\r" + prompt + cyan(shown) + "\x1b[K")
 	if after > 0 {
 		fmt.Fprintf(&b, "\x1b[%dD", after)
 	}

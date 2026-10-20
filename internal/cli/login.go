@@ -2,8 +2,8 @@ package cli
 
 import (
 	"context"
-	"fmt"
-	"os"
+
+	"github.com/mst-mkt/rakutan/internal/ui"
 )
 
 type loginCmd struct{}
@@ -12,7 +12,7 @@ func (loginCmd) Run(ctx context.Context, s *session) error {
 	if err := s.loginInteractively(ctx); err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stderr, "ログインしました")
+	ui.Done("ログインしました")
 	return nil
 }
 

@@ -8,10 +8,8 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log/slog"
-	"os"
 
 	"github.com/blacktop/go-termimg"
-	"github.com/charmbracelet/x/term"
 )
 
 const (
@@ -48,11 +46,7 @@ func fit(bounds image.Rectangle, maxCols, maxRows int) (cols, rows int) {
 }
 
 func imageColumns() int {
-	width, _, err := term.GetSize(os.Stdout.Fd())
-	if err != nil || width <= 0 {
-		return maxImageColumns
-	}
-	return min(width-2, maxImageColumns)
+	return min(terminalWidth()-2, maxImageColumns)
 }
 
 func reserve(rows int) string {

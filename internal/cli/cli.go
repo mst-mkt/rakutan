@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -75,11 +74,11 @@ func run(k *kong.Context) int {
 		return 0
 	case errors.Is(err, ui.ErrAborted):
 		slog.Info("aborted")
-		fmt.Fprintln(os.Stderr, "中断しました")
+		ui.Notice("中断しました")
 		return 130
 	default:
 		slog.Error("failed", "err", err)
-		fmt.Fprintf(os.Stderr, "rakutan: error: %v\n", err)
+		ui.Error(err)
 		return 1
 	}
 }
@@ -87,6 +86,6 @@ func run(k *kong.Context) int {
 func warn(err error, msg string) {
 	if err != nil {
 		slog.Warn(msg, "err", err)
-		fmt.Fprintf(os.Stderr, "%s: %v\n", msg, err)
+		ui.Warn(msg, err)
 	}
 }

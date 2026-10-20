@@ -238,7 +238,7 @@ func (a *attempt) answer(ctx context.Context, i int) error {
 
 func (a *attempt) menu(ctx context.Context) error {
 	for {
-		ui.PrintAnswers(a.sheet.Questions, a.answers)
+		ui.PrintAnswers("回答一覧", a.sheet.Questions, a.answers)
 		act, err := ui.Select("どうしますか", actions)
 		if err != nil {
 			return err
@@ -266,7 +266,7 @@ func (a *attempt) menu(ctx context.Context) error {
 			if err := a.s.client.Save(ctx, a.sheet, a.answers); err != nil {
 				return err
 			}
-			fmt.Println("一時保存しました")
+			ui.Done("一時保存しました")
 			return nil
 		case quitAction:
 			return nil
@@ -280,8 +280,7 @@ func (a *attempt) submit(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	fmt.Println("\nサーバーに送った回答:")
-	ui.PrintAnswers(cf.Questions, manaba.AnswersOf(cf.Questions))
+	ui.PrintAnswers("サーバーが受け付けた回答", cf.Questions, manaba.AnswersOf(cf.Questions))
 	ok, err := ui.Confirm("この内容で提出しますか?")
 	if err != nil {
 		return false, err
@@ -304,6 +303,6 @@ func showResult(ctx context.Context, s *session, r *manaba.Review) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("ログを保存しました: %s\n", file)
+	ui.PrintSaved(file)
 	return nil
 }

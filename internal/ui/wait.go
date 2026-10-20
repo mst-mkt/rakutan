@@ -11,7 +11,7 @@ func Wait(message string, f func() error) error {
 
 	start := time.Now()
 	show := func() {
-		fmt.Printf("\r%s… %d 秒\x1b[K", message, int(time.Since(start).Seconds()))
+		fmt.Printf("\r%s %s\x1b[K", faint(message+"…"), faint(fmt.Sprintf("%d 秒", int(time.Since(start).Seconds()))))
 	}
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()

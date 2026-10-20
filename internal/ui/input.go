@@ -15,11 +15,11 @@ import (
 var stdin = bufio.NewReader(os.Stdin)
 
 func Input(title, current string) (string, error) {
-	return editLine(title+": ", current, false)
+	return editLine(title, promptLine(title, ""), current, false)
 }
 
 func Password(title string) (string, error) {
-	return editLine(title+": ", "", true)
+	return editLine(title, promptLine(title, ""), "", true)
 }
 
 func Credential() (userID, password string, err error) {
@@ -31,11 +31,11 @@ func Credential() (userID, password string, err error) {
 }
 
 func Text(title, current string) (string, error) {
-	fmt.Println(title + " (空行で終了):")
+	fmt.Println(promptLine(title, faint("(空行で終了)")))
 	initial := strings.Split(current, "\n")
 	var lines []string
 	for i := 0; ; i++ {
-		line, err := editLine("  ", at(initial, i), false)
+		line, err := editLine(title, "  ", at(initial, i), false)
 		if err != nil {
 			return "", err
 		}
@@ -47,17 +47,18 @@ func Text(title, current string) (string, error) {
 }
 
 func Confirm(title string) (bool, error) {
-	line, err := editLine(title+" (y/N) ", "", false)
+	prompt := promptBar("?") + " " + bold(title) + " " + faint("(y/N)") + " "
+	line, err := editLine(title, prompt, "", false)
 	if err != nil {
 		return false, err
 	}
 	return isYes(line), nil
 }
 
-func editLine(prompt, initial string, mask bool) (string, error) {
+func editLine(title, prompt, initial string, mask bool) (string, error) {
 	line, err := readOrEdit(prompt, initial, mask)
 	if !mask {
-		slog.Debug("input", "prompt", prompt, "value", line, "err", err)
+		slog.Debug("input", "title", title, "value", line, "err", err)
 	}
 	return line, err
 }
